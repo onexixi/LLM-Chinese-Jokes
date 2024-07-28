@@ -65,7 +65,7 @@ for key, value in data.items():
     print(f"{key}:")
     print(f"  描述: {value.get('描述', '')}")
     steps = value.get('具体执行步骤')
-    if steps is not None:
-        print("  具体执行步骤:")
-        for step in steps:
-            print(f"    - {step}")
+    # if steps is not None:
+        # print("  具体执行步骤:")
+        # for step in steps:
+        #     print(f"    - {step}")
