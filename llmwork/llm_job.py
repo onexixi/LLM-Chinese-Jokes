@@ -17,6 +17,7 @@ class LLMProcessor:
         self.stop_event = threading.Event()
         self.init_db()
         self.models_url = f"{openai_base_url}/models"
+        self.model=""
 
     def get_available_models(self):
         model = ""
@@ -65,6 +66,7 @@ class LLMProcessor:
             conn.commit()
 
     def execute_llm_operation(self, prompt, model="default"):
+        print(prompt)
         try:
             completion = self.client.chat.completions.create(
                 model=model,
@@ -72,6 +74,7 @@ class LLMProcessor:
                 temperature=0.7,
             )
             result = completion.choices[0].message.content
+            print(result)
             return result, "success"
         except Exception as e:
             print(f"Error processing prompt '{prompt}': {str(e)}")
