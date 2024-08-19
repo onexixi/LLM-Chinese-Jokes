@@ -1,3 +1,4 @@
+import random
 from datetime import datetime
 from typing import List, Tuple, Dict
 from llmwork.llm_job import LLMProcessor
@@ -40,19 +41,56 @@ class BusinessIdeaProcessor:
         business_opportunity = self._extract_business_opportunity(summary)
         return business_opportunity
 
-    def _generate_dialogue(self) -> str:
-        roles = ["创业者", "投资人", "技术专家", "市场营销专家", "潜在用户"]
-        dialogue = ""
-        for round in range(5):
-            prompt = f"""
-            生成一轮关于创新商业想法的对话。参与者包括：{', '.join(roles)}。
-            这是第{round + 1}轮对话，请确保每个角色都有发言，并且对话自然流畅。
-            对话应该围绕一个潜在的商业机会展开，包括问题识别、解决方案讨论、市场分析等方面。
+    import random
 
-            请直接输出对话内容，不需要额外的解释或格式。
+    def _generate_dialogue(self) -> str:
+        roles = {
+            "创业者": """你是一位充满激情的连续创业者，有多次成功和失败的经验。你具有敏锐的洞察力，强烈的问题解决导向，有说服力的沟通能力，高度的适应性和抗压能力，以及扎实的商业知识。在讨论中，你应该展现出对机会的热情，同时也要表现出对风险的认知。""",
+            "投资人": """你是一位在科技和创新领域有10年以上经验的风险投资人。你有敏锐的商业嗅觉，深厚的行业知识，严谨的分析能力，广泛的人脉网络，和战略性思维。在对话中，你应该提出尖锐的问题，挑战假设，并要求具体的数据支持。""",
+            "技术专家": """你是一位在多个前沿技术领域都有深入研究的资深工程师，拥有20年以上的经验。你有深厚的技术功底，强大的问题解决能力，前瞻性思维，实用主义态度，和跨学科知识。在讨论中，你应该提供深入的技术见解，评估技术可行性，并指出潜在的技术挑战。""",
+            "市场营销专家": """你是一位在多个行业有丰富经验的高级市场营销顾问。你有出色的市场洞察力，创新的营销策略思维，数据驱动的决策能力，多渠道整合能力，和敏锐的竞争分析能力。在对话中，你应该提供市场趋势分析，讨论目标受众定位，并提出具体的营销策略建议。""",
+            "潜在用户": """你是一位典型的目标市场代表，对新产品和服务有着浓厚的兴趣，但也有着明确的需求和担忧。你是一个理性消费者，注重用户体验，关注隐私和安全，追求个性化，并且是社交媒体活跃用户。在讨论中，你应该表达出对产品或服务的实际需求，提出潜在的使用场景，并指出可能的顾虑或改进建议。"""
+        }
+
+        dialogue = ""
+        context = "一个创新的智能家居系统，集成了AI助手、能源管理和安全监控功能。"
+
+        for round in range(5):
+            round_dialogue = ""
+            # 随机化角色顺序
+            shuffled_roles = list(roles.items())
+            random.shuffle(shuffled_roles)
+
+            for role, description in shuffled_roles:
+                prompt = f"""
+                你现在扮演的角色是：{role}
+
+                角色描述：
+                {description}
+
+                当前讨论的主题是：{context}
+                这是第{round + 1}轮对话。请根据你的角色特点，对当前讨论的主题发表看法或提出问题。
+                你的回应应该围绕以下几个方面：问题识别、解决方案讨论、市场分析、技术可行性、用户需求等。
+
+                之前的对话记录：
+                {dialogue}
+
+                请用约150-200字的篇幅给出你的回应。直接输出对话内容，不需要额外的解释或格式。以你的角色名开头。
+                确保你的观点和建议都与你的背景和专业知识一致，并对之前的讨论有所回应或拓展。
+                """
+                result = self.llm_processor.process_llm_request(prompt, "dialogue", self.llm_processor.model)
+                round_dialogue += result + "\n\n"
+
+            dialogue += round_dialogue
+
+            # 更新上下文，为下一轮对话做准备
+            context_prompt = f"""
+            基于以下对话内容，总结讨论的主要点和新出现的想法，用一到两句话描述下一轮讨论应该关注的方向：
+
+            {round_dialogue}
             """
-            result = self.llm_processor.process_llm_request(prompt, "dialogue", self.llm_processor.model)
-            dialogue += result + "\n\n"
+            context = self.llm_processor.process_llm_request(context_prompt, "summary", self.llm_processor.model)
+
         return dialogue
 
     def _summarize_dialogue(self, dialogue: str) -> str:
